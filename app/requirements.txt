@@ -1,0 +1,8 @@
+fastapi==0.79.0
+uvicorn==0.18.2
+pydantic==1.9.0
+--find-links https://storage.googleapis.com/jax-releases/jax_releases.html
+jax[cuda]>=version
+git+https://github.com/borisdayma/dalle-mini@main
+git+https://github.com/patil-suraj/vqgan-jax@main
+pydantic[dotenv]

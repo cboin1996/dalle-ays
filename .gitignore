@@ -1,0 +1,17 @@
+# Python
+__pycache__
+
+# Env
+.env
+.task
+venv
+.vscode
+
+# binaries
+bin
+
+# Outputs
+models
+images
+outputs
+

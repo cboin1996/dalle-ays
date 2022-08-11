@@ -1,0 +1,56 @@
+version: "3"
+
+output: prefixed
+vars:
+  APP_NAME: dalle-ays
+  VERSION: v0.0.0
+  APP_ROOT: app
+tasks:
+  setup:
+    prefix: setup
+    desc: sets up the development environment
+    cmds:
+      - 'python3 -m venv venv'
+      - echo activate your venv with 'source venv/bin/activate'
+    sources:
+      - venv
+
+  install-deps:
+    prefix: install-deps
+    cmds:
+      - pip install black isort
+      - pip install fastapi==0.79.0 uvicorn==0.18.2 pydantic==1.9.0
+      - pip install "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+      - pip install -q git+https://github.com/cboin1996/dalle-mini@feat/add-wandb-api-key-auth
+      - pip install -q git+https://github.com/patil-suraj/vqgan-jax@main
+      - pip install pydantic[dotenv]
+
+  build:
+    prefix: build
+    desc: builds the docker app
+    cmds:
+      - docker build -t {{.APP_NAME}}:{{.VERSION}} .
+    sources:
+      - '{{.APP_ROOT}}/**'
+      - '{{.APP_ROOT}}/*/**'
+      - Dockerfile
+
+  dev:
+    prefix: dev
+    desc: runs the app (use -w flag)
+    cmds:
+      - task: build
+      - task: run
+
+  lint:
+    prefix: lint
+    desc: lint the application
+    cmds:
+      - black {{.APP_ROOT}}/.
+      - isort {{.APP_ROOT}}/.
+    deps: [setup]
+
+  run:
+    prefix: run
+    cmds:
+      - docker run -p 8000:8000 --gpus all --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
