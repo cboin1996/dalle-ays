@@ -37,7 +37,7 @@ jobs:
           echo ::set-output name=docker_platform_arm::${DOCKER_TARGET_PLATFORM_ARM}
           echo ::set-output name=docker_platform_amd64::${DOCKER_TARGET_PLATFORM_x64}
           echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
-          echo ::set-output name=version::${{ steps.versioning.outputs.version}}
+          echo ::set-output name=version:: ${{ steps.vars.outputs.tag }}
       - name: Docker Login
         if: success()
         run: |
