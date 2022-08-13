@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       DOCKER_REGISTRY: docker.io
-      DOCKER_IMAGE: cboin/pigbot
+      DOCKER_IMAGE: cboin/dalle-ays
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_TARGET_PLATFORM_ARM: linux/arm64/v8
@@ -37,7 +37,7 @@ jobs:
           echo ::set-output name=docker_platform_arm::${DOCKER_TARGET_PLATFORM_ARM}
           echo ::set-output name=docker_platform_amd64::${DOCKER_TARGET_PLATFORM_x64}
           echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
-          echo ::set-output name=version:: ${{ steps.vars.outputs.tag }}
+          echo ::set-output name=version:: ${{steps.vars.outputs.tag}}
       - name: Docker Login
         if: success()
         run: |
