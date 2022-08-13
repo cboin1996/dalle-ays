@@ -8,12 +8,9 @@ from pydantic import BaseModel, BaseSettings
 
 
 class DalleConfig(BaseSettings):
-    """Configuration using .env file or defaults declared in here
-    Args:
-        BaseSettings (pydantic.BaseSettings): BaseSettings object from pydantic
-    """
+    """Configuration using .env file or defaults declared in here"""
 
-    dalle_model: str = "dalle-mini/dalle-mini/mega-1-fp16:latest"
+    dalle_model_str: str = "dalle-mini/dalle-mini/mega-1-fp16:latest"
     dalle_commit_id: str = ""
     vqgan_repo: str = "dalle-mini/vqgan_imagenet_f16_16384"
     vqgan_commit_id: str = "e93a26e7707683d349bf5d5c41c5b0ef69b677a9"
@@ -22,6 +19,8 @@ class DalleConfig(BaseSettings):
     root_dir: str = sys.path[0]
     model_dir: str = os.path.join(root_dir, "models")
     dalle_bart_model_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-%s")
+    dalle_bart_tokenizer_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-tokenizer-%s")
+    dalle_bart_config_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-config-%s")
     vqgan_model_dir_template: str = os.path.join(model_dir, "%s", "vqgan-%s")
     outputs_dir: str = os.path.join(root_dir, "outputs")
     dirs: List[str] = [model_dir, outputs_dir]
@@ -35,6 +34,16 @@ class DalleConfig(BaseSettings):
         if revision == "":
             revision = "None"
         return self.dalle_bart_model_dir_template % (id, revision)
+
+    def get_formatted_dalle_bart_tokenizer_dir(self, id: int, revision: str) -> str:
+        if revision == "":
+            revision = "None"
+        return self.dalle_bart_tokenizer_dir_template % (id, revision)
+
+    def get_formatted_dalle_bart_config_dir(self, id: int, revision: str) -> str:
+        if revision == "":
+            revision = "None"
+        return self.dalle_bart_config_dir_template % (id, revision)
 
     def get_formatted_vqgan_model_dir(self, id: int, revision: str) -> str:
         if revision == "":

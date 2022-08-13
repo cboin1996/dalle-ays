@@ -23,7 +23,7 @@ task env
 
 ## Locally
 
-Configure vscode debugger:
+Configure vscode debugger for live reload local build (you will need cuda and nvidia drivers):
 
 ```
 {
@@ -45,6 +45,8 @@ Configure vscode debugger:
 
 ## Docker
 
+Or, alternatively,
+
 Build the image:
 
 ```
@@ -53,14 +55,23 @@ task build
 
 Run:
 
+Using a gpu:
 ```
 task run
 ```
+Using cpu only
+```
+task run-cpu
+```
 
-Development (live reloads docker builds):
-
+Development (live reload docker builds with gpu):
+Using gpu:
 ```
 task dev -w
+```
+Using cpu:
+```
+task dev-cpu -w
 ```
 
 Lint:

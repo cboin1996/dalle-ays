@@ -30,17 +30,42 @@ tasks:
     desc: builds the docker app
     cmds:
       - docker build -t {{.APP_NAME}}:{{.VERSION}} .
+
+  clean:
+    prefix: clean
+    desc: removes the built image
+    cmds:
+      - docker rm {{.APP_NAME}} || true
+
+  stop:
+    prefix: stop
+    desc: stops the running container
+    cmds:
+      - docker kill {{.APP_NAME}}
+
+  dev:
+    prefix: dev
+    desc: runs the app with gpu (use -w flag for live rebuilds)
+    cmds:
+      - task: clean
+      - task: build
+      - task: run
     sources:
       - '{{.APP_ROOT}}/**'
       - '{{.APP_ROOT}}/*/**'
       - Dockerfile
 
-  dev:
+  dev-cpu:
     prefix: dev
-    desc: runs the app (use -w flag)
+    desc: runs the app for cpu only (use -w flag for live rebuilds)
     cmds:
+      - task: clean
       - task: build
-      - task: run
+      - task: run-cpu
+    sources:
+      - '{{.APP_ROOT}}/**'
+      - '{{.APP_ROOT}}/*/**'
+      - Dockerfile
 
   lint:
     prefix: lint
@@ -53,4 +78,12 @@ tasks:
   run:
     prefix: run
     cmds:
-      - docker run -p 8000:8000 --gpus all --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
+      - docker run --rm --name "dalle-ays" -p 8000:8000 --gpus all --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
+
+  run-cpu:
+    prefix: run-cpu
+      - docker run --rm --name "dalle-ays" -p 8000:8000 --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
+  env:
+    prefix: env
+    cmds:
+      - echo "WANDB_API_KEY=<click here and replace this with key https://wandb.ai/authorize>"

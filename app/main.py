@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 app.include_router(dalle.router)
 
-
 @app.on_event("startup")
 def startup_event():
     for _dir in settings.DalleConfig().dirs:
