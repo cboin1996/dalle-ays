@@ -4,20 +4,22 @@ import logging
 import os
 import random
 from functools import (  # Model functions are compiled and parallelized to take advantage of multiple devices.
-    lru_cache, partial)
+    lru_cache,
+    partial,
+)
 from typing import Dict, List, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 from dalle_mini import DalleBart, DalleBartProcessor  # Load models & tokenizer
-from dalle_mini.model import (DalleBartConfig,  # Dalle models
-                              DalleBartTokenizer)
+from dalle_mini.model import DalleBartConfig, DalleBartTokenizer  # Dalle models
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.logger import logger
 from fastapi.responses import FileResponse
-from flax.jax_utils import \
-    replicate  # Model parameters are replicated on each device for faster inference.
+from flax.jax_utils import (
+    replicate,
+)  # Model parameters are replicated on each device for faster inference.
 from flax.training.common_utils import shard_prng_key
 from PIL import Image
 from pydantic import BaseModel
@@ -26,9 +28,15 @@ from transformers import CLIPProcessor, FlaxCLIPModel
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
 from ..config import settings
-from ..dependencies import (DalleModelObject, ModelPaths, get_dalle_settings,
-                            get_formatted_image_name, image_browser,
-                            model_browser, model_loader)
+from ..dependencies import (
+    DalleModelObject,
+    ModelPaths,
+    get_dalle_settings,
+    get_formatted_image_name,
+    image_browser,
+    model_browser,
+    model_loader,
+)
 
 uvicorn_logger = logging.getLogger("uvicorn.error")
 logger.handlers = uvicorn_logger.handlers
