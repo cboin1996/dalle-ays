@@ -2,16 +2,17 @@ import datetime
 import glob
 import logging
 import os
+import random
 from functools import (  # Model functions are compiled and parallelized to take advantage of multiple devices.
     lru_cache, partial)
-from typing import Dict, Optional, List
-import random
+from typing import Dict, List, Optional
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 from dalle_mini import DalleBart, DalleBartProcessor  # Load models & tokenizer
-from dalle_mini.model import DalleBartTokenizer, DalleBartConfig # Dalle models
-
+from dalle_mini.model import (DalleBartConfig,  # Dalle models
+                              DalleBartTokenizer)
 from fastapi import APIRouter, Depends, HTTPException
 from flax.jax_utils import \
     replicate  # Model parameters are replicated on each device for faster inference.
@@ -50,7 +51,7 @@ def pull(
     vqgan_sha: Optional[str] = None,
     dalle_sha: Optional[str] = None,
     model_paths: ModelPaths = Depends(model_browser),
-    settings: settings.DalleConfig = Depends(get_dalle_settings)
+    settings: settings.DalleConfig = Depends(get_dalle_settings),
 ):
     """Pull model from wandb and save to disk, returning the paths to the model"""
     # return local paths if found
@@ -61,7 +62,6 @@ def pull(
         dalle_sha = settings.dalle_commit_id
     if vqgan_sha is None:
         vqgan_sha = settings.vqgan_commit_id
-
 
     # Load dalle-mini
     dalle_mini, dalle_mini_params = DalleBart.from_pretrained(
@@ -83,8 +83,9 @@ def pull(
     )
 
     # Have to load the config separate, due to no sdk exposure in the processor
-    config = DalleBartConfig.from_pretrained(settings.dalle_model_str,
-        revision=dalle_sha)
+    config = DalleBartConfig.from_pretrained(
+        settings.dalle_model_str, revision=dalle_sha
+    )
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
 
@@ -92,8 +93,12 @@ def pull(
     paths = ModelPaths(
         dalle=settings.get_formatted_dalle_bart_model_dir(timestamp, dalle_sha),
         vqgan=settings.get_formatted_vqgan_model_dir(timestamp, vqgan_sha),
-        dalle_processor_tokenizer = settings.get_formatted_dalle_bart_tokenizer_dir(timestamp, dalle_sha),
-        dalle_processor_config = settings.get_formatted_dalle_bart_config_dir(timestamp, dalle_sha)
+        dalle_processor_tokenizer=settings.get_formatted_dalle_bart_tokenizer_dir(
+            timestamp, dalle_sha
+        ),
+        dalle_processor_config=settings.get_formatted_dalle_bart_config_dir(
+            timestamp, dalle_sha
+        ),
     )
 
     # save dalle-mini
@@ -105,13 +110,9 @@ def pull(
     # Note: the processor model does not have save ability.. exposed yet,
     # so I do some absolute black magic to save the subcomponents (tokenizer and config)
     # and load them back later :9
-    processor.tokenizer.save_pretrained(
-        paths.dalle_processor_tokenizer
-    )
+    processor.tokenizer.save_pretrained(paths.dalle_processor_tokenizer)
 
-    config.save_pretrained(
-        paths.dalle_processor_config
-    )
+    config.save_pretrained(paths.dalle_processor_config)
 
     # save vqgan
     vqgan.save_pretrained(
@@ -120,7 +121,6 @@ def pull(
     )
 
     return paths
-
 
 
 @router.post("/show", response_model=Dict[str, List[str]])

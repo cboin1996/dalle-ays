@@ -7,8 +7,9 @@ from typing import Dict, Optional
 
 import jax.numpy as jnp
 from dalle_mini import DalleBart, DalleBartProcessor
-from dalle_mini.model import DalleBartTokenizer, DalleBartConfig # Dalle models
-from fastapi import Depends, Request, params, HTTPException
+from dalle_mini.model import (DalleBartConfig,  # Dalle models
+                              DalleBartTokenizer)
+from fastapi import Depends, HTTPException, Request, params
 from pydantic import BaseModel
 from vqgan_jax.modeling_flax_vqgan import VQModel  # vqgan model
 
@@ -56,10 +57,22 @@ class ModelPaths(BaseModel):
     dalle_processor_config: str = ""
 
     def __bool__(self):
-        return self.dalle != "" and self.vqgan != "" and self.dalle_processor_tokenizer != "" and self.dalle_processor_config != ""
+        return (
+            self.dalle != ""
+            and self.vqgan != ""
+            and self.dalle_processor_tokenizer != ""
+            and self.dalle_processor_config != ""
+        )
 
     def __hash__(self):
-        return hash((self.dalle, self.vqgan, self.dalle_processor_tokenizer, self.dalle_processor_config))
+        return hash(
+            (
+                self.dalle,
+                self.vqgan,
+                self.dalle_processor_tokenizer,
+                self.dalle_processor_config,
+            )
+        )
 
     def __eq__(self, other):
         return (
@@ -95,16 +108,22 @@ def model_browser(
         _id = os.path.split(model_id_path)[-1]
         dalle_path = settings.get_formatted_dalle_bart_model_dir(_id, dalle_sha)
         vqgan_path = settings.get_formatted_vqgan_model_dir(_id, vqgan_sha)
-        dalle_tokenizer_path = settings.get_formatted_dalle_bart_tokenizer_dir(_id, dalle_sha)
+        dalle_tokenizer_path = settings.get_formatted_dalle_bart_tokenizer_dir(
+            _id, dalle_sha
+        )
         dalle_config_path = settings.get_formatted_dalle_bart_config_dir(_id, dalle_sha)
 
-        if os.path.exists(dalle_path) and os.path.exists(vqgan_path) \
-          and os.path.exists(dalle_tokenizer_path) and os.path.exists(dalle_config_path):
+        if (
+            os.path.exists(dalle_path)
+            and os.path.exists(vqgan_path)
+            and os.path.exists(dalle_tokenizer_path)
+            and os.path.exists(dalle_config_path)
+        ):
             return ModelPaths(
                 dalle=dalle_path,
                 vqgan=vqgan_path,
                 dalle_processor_tokenizer=dalle_tokenizer_path,
-                dalle_processor_config=dalle_config_path
+                dalle_processor_config=dalle_config_path,
             )
 
     return ModelPaths()
@@ -146,9 +165,13 @@ def model_loader(model_paths: ModelPaths) -> DalleModelObject:
     # )
 
     # Load the processor from disk, by building up the tokenizer, config and THEN the processor :9
-    tokenizer = DalleBartTokenizer.from_pretrained(model_paths.dalle_processor_tokenizer)
-    config    = DalleBartConfig.from_pretrained(model_paths.dalle_processor_config)
-    processor = DalleBartProcessor(tokenizer, config.normalize_text, config.max_text_length)
+    tokenizer = DalleBartTokenizer.from_pretrained(
+        model_paths.dalle_processor_tokenizer
+    )
+    config = DalleBartConfig.from_pretrained(model_paths.dalle_processor_config)
+    processor = DalleBartProcessor(
+        tokenizer, config.normalize_text, config.max_text_length
+    )
     dalle_obj.processor = processor
 
     # Load dalle mini

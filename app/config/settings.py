@@ -19,8 +19,12 @@ class DalleConfig(BaseSettings):
     root_dir: str = sys.path[0]
     model_dir: str = os.path.join(root_dir, "models")
     dalle_bart_model_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-%s")
-    dalle_bart_tokenizer_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-tokenizer-%s")
-    dalle_bart_config_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-config-%s")
+    dalle_bart_tokenizer_dir_template: str = os.path.join(
+        model_dir, "%s", "dalle-bart-tokenizer-%s"
+    )
+    dalle_bart_config_dir_template: str = os.path.join(
+        model_dir, "%s", "dalle-bart-config-%s"
+    )
     vqgan_model_dir_template: str = os.path.join(model_dir, "%s", "vqgan-%s")
     outputs_dir: str = os.path.join(root_dir, "outputs")
     dirs: List[str] = [model_dir, outputs_dir]
