@@ -72,7 +72,6 @@ tasks:
     desc: lint the application
     cmds:
       - black {{.APP_ROOT}}/.
-      - isort {{.APP_ROOT}}/.
     deps: [setup]
 
   run:

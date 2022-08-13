@@ -7,8 +7,7 @@ from typing import Dict, List, Optional
 
 import jax.numpy as jnp
 from dalle_mini import DalleBart, DalleBartProcessor
-from dalle_mini.model import (DalleBartConfig,  # Dalle models
-                              DalleBartTokenizer)
+from dalle_mini.model import DalleBartConfig, DalleBartTokenizer  # Dalle models
 from fastapi import Depends, HTTPException, Request, params
 from fastapi.logger import logger
 from pydantic import BaseModel
