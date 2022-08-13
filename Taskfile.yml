@@ -78,11 +78,11 @@ tasks:
   run:
     prefix: run
     cmds:
-      - docker run --rm --name "dalle-ays" -p 8000:8000 --gpus all --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
+      - docker run --rm --name "dalle-ays" -p 8000:8000 --gpus all --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}} --log-level debug
 
   run-cpu:
     prefix: run-cpu
-      - docker run --rm --name "dalle-ays" -p 8000:8000 --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}}
+      - docker run --rm --name "dalle-ays" -p 8000:8000 --env-file .env -v "${PWD}":/{{.APP_ROOT}} {{.APP_NAME}}:{{.VERSION}} --log-level debug
   env:
     prefix: env
     cmds:

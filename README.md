@@ -33,11 +33,11 @@ Configure vscode debugger for live reload local build (you will need cuda and nv
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["app.main:app"],
+      "args": ["app.main:app", "--reload", "--log-level", "debug"],
       "jinja": true,
       "justMyCode": true,
       "envFile": "${workspaceFolder}/.env"
-    }
+    },
   ]
 }
 

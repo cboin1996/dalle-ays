@@ -28,6 +28,8 @@ class DalleConfig(BaseSettings):
     vqgan_model_dir_template: str = os.path.join(model_dir, "%s", "vqgan-%s")
     outputs_dir: str = os.path.join(root_dir, "outputs")
     dirs: List[str] = [model_dir, outputs_dir]
+    log_level: str
+    image_format: str = ".png"
 
     class Config:
         config_path = os.path.join(os.path.dirname(sys.path[0]), ".env")
@@ -53,32 +55,3 @@ class DalleConfig(BaseSettings):
         if revision == "":
             revision = "None"
         return self.vqgan_model_dir_template % (id, revision)
-
-
-class LogConfig(BaseModel):
-    """Logging configuration to be set for the server"""
-
-    LOGGER_NAME: str = "dalle-ays"
-    LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
-    LOG_LEVEL: str = "DEBUG"
-
-    # Logging config
-    version = 1
-    disable_existing_loggers = False
-    formatters = {
-        "default": {
-            "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": LOG_FORMAT,
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-    }
-    handlers = {
-        "default": {
-            "formatter": "default",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
-        },
-    }
-    loggers = {
-        LOGGER_NAME: {"handlers": ["default"], "level": LOG_LEVEL},
-    }
