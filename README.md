@@ -3,14 +3,15 @@
 # Configuration
 Note any env vars with a `None` default value are needed to run the server.
 
-| Variable         | Default                                    | Type |
-| ---------------- | ------------------------------------------ | ---- |
-| DALLE_MODEL      | "dalle-mini/dalle-mini/mega-1-fp16:latest" | str  |
-| VQGAN_REPO       | "dalle-mini/vqgan_imagenet_f16_16384"      | str  |
-| VQGAN_COMMIT_ID  | "e93a26e7707683d349bf5d5c41c5b0ef69b677a9" | str  |
-| DEFAULT_NUM_PICS | 3                                          | int  |
-| WANDB_API_KEY    | None                                       | str  |
-
+| Variable                       | Default                                    | Type                                      | Desc                                             |
+| ------------------------------ | ------------------------------------------ | ----------------------------------------- | ------------------------------------------------ |
+| DALLE_MODEL                    | "dalle-mini/dalle-mini/mega-1-fp16:latest" | str                                       |                                                  |
+| VQGAN_REPO                     | "dalle-mini/vqgan_imagenet_f16_16384"      | str                                       |                                                  |
+| VQGAN_COMMIT_ID                | "e93a26e7707683d349bf5d5c41c5b0ef69b677a9" | str                                       |                                                  |
+| DEFAULT_NUM_PICS               | 3                                          | int                                       |                                                  |
+| WANDB_API_KEY                  | None                                       | str                                       |                                                  |
+| XLA_PYTHON_CLIENT_MEM_FRACTION | .85                                        | float                                     | fraction of gpu memory if preallocate is enabled |
+| XLA_PYTHON_CLIENT_PREALLOCATE  | false                                      | turning this off reduces gpu memory usage |                                                  |
 # Development
 
 Mandatory env vars are required from the configuration section in a .env file!

@@ -4,7 +4,9 @@ import logging
 import os
 from functools import lru_cache
 from typing import Dict, List, Optional
-
+from flax.jax_utils import (
+    replicate,
+)
 import jax.numpy as jnp
 from dalle_mini import DalleBart, DalleBartProcessor
 from dalle_mini.model import DalleBartConfig, DalleBartTokenizer  # Dalle models
@@ -161,12 +163,14 @@ class DalleModelObject:
 
     dalle_mini: DalleBart
     dalle_mini_params: object
+    repl_dalle_mini_params: object
     processor: DalleBartProcessor
     vqgan: VQModel
     vqgan_params: object
+    repl_vqgan_params: object
 
 
-@lru_cache()
+@lru_cache(maxsize=1)
 def model_loader(model_paths: ModelPaths) -> DalleModelObject:
     """Load model
 
@@ -209,7 +213,7 @@ def model_loader(model_paths: ModelPaths) -> DalleModelObject:
     logger.info(f"loading dalle-mini from {model_paths.dalle}!")
     dalle_obj.dalle_mini, dalle_obj.dalle_mini_params = DalleBart.from_pretrained(
         model_paths.dalle,
-        dtype=jnp.float32,
+        dtype=jnp.float16,
         _do_init=False,
     )
 
@@ -218,6 +222,10 @@ def model_loader(model_paths: ModelPaths) -> DalleModelObject:
     dalle_obj.vqgan, dalle_obj.vqgan_params = VQModel.from_pretrained(
         model_paths.vqgan, _do_init=False
     )
+
+    # Model parameters are replicated on each device for faster inference.
+    dalle_obj.repl_dalle_mini_params = replicate(dalle_obj.dalle_mini_params)
+    dalle_obj.repl_vqgan_params = replicate(dalle_obj.vqgan_params)
 
     return dalle_obj
 

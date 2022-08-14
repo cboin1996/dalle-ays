@@ -19,6 +19,11 @@ class DalleConfig(BaseSettings):
     root_dir: str = sys.path[0]
     model_dir: str = os.path.join(root_dir, "models")
     dalle_bart_model_dir_template: str = os.path.join(model_dir, "%s", "dalle-bart-%s")
+    # JAX memory settings https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+    xla_python_client_mem_fraction: float = 0.85
+    xla_python_client_preallocate: bool = False
+    xla_python_client_allocator: Optional[str] = "platform"
+
     dalle_bart_tokenizer_dir_template: str = os.path.join(
         model_dir, "%s", "dalle-bart-tokenizer-%s"
     )
