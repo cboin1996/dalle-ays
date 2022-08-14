@@ -8,7 +8,7 @@ from functools import (  # Model functions are compiled and parallelized to take
     partial,
 )
 from typing import Dict, List, Optional, Tuple
-
+from asyncio import Lock
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -36,11 +36,13 @@ from ..dependencies import (
     image_browser,
     model_browser,
     model_loader,
+    valid_paths,
 )
 
 uvicorn_logger = logging.getLogger("uvicorn.error")
 logger.handlers = uvicorn_logger.handlers
 logger.setLevel(uvicorn_logger.level)
+inference_lock = Lock()
 
 router = APIRouter(
     prefix="/dalle",
@@ -49,17 +51,22 @@ router = APIRouter(
 
 
 @router.get("/browse", response_model=ModelPaths)
-def browse(
+async def browse(
     vqgan_sha: Optional[str] = None,
     dalle_sha: Optional[str] = None,
     model_paths: ModelPaths = Depends(model_browser),
 ):
     """Browses saved models for matching dalle and vqgan sha, returning the id."""
+    if not model_paths:
+        raise HTTPException(
+            404,
+            detail=f"No models exist for dalle_sha={dalle_sha}, vqgan_sha={vqgan_sha}! Try /pull to get some :)",
+        )
     return model_paths
 
 
 @router.get("/images", response_model=List[str])
-def images(image_paths: List[str] = Depends(image_browser)):
+async def images(image_paths: List[str] = Depends(image_browser)):
     """Get a list of all images on disk.
 
     Returns:
@@ -102,7 +109,7 @@ def pull(
     dalle_mini, dalle_mini_params = DalleBart.from_pretrained(
         settings.dalle_model_str,
         revision=dalle_sha,
-        dtype=jnp.float32,
+        dtype=jnp.float16,
         _do_init=False,
     )
 
@@ -172,38 +179,42 @@ class ImagePathResponse(BaseModel):
 
 
 @router.post("/show", response_model=ImagePathResponse)
-def show(
+async def show(
     queries: List[str],
     n_predictions: int,
+    # model_paths: ModelPaths,
     settings: settings.DalleConfig = Depends(get_dalle_settings),
-    model_obj: DalleModelObject = Depends(model_loader),
+    dalle_obj: DalleModelObject = Depends(model_loader),
 ):
     """Query the current model
 
     Args:
         query (str): the query to process in dalle, returning the generated image as a response
     """
-    model = model_obj.dalle_mini
-    model_params = model_obj.dalle_mini_params
-    processor = model_obj.processor
-    vqgan = model_obj.vqgan
-    vqgan_params = model_obj.vqgan_params
-
     logger.info(f"Recieved query: {queries}")
     # check how many devices are available
     logger.debug(
         f"Num. available devices for parrallel processing: {jax.local_device_count()}"
     )
-    # Model parameters are replicated on each device for faster inference.
-    params = replicate(model_params)
-    vqgan_params = replicate(vqgan_params)
 
-    # model inference
+    logger.info(f"Tokenizing queries {queries}")
+    # Note: we could use the same prompt multiple times for faster inference.
+    tokenized_queries = dalle_obj.processor(queries)
+    # Finally we replicate the prompts onto each device.
+    tokenized_query = replicate(tokenized_queries)
+
+    # We can customize generation parameters (see https://huggingface.co/blog/how-to-generate)
+    gen_top_k = None
+    gen_top_p = None
+    temperature = None
+    cond_scale = 10.0
+
+    # model inference functions, with replication
     @partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5, 6))
     def p_generate(
         tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale
     ):
-        return model.generate(
+        return dalle_obj.dalle_mini.generate(
             **tokenized_prompt,
             prng_key=key,
             params=params,
@@ -216,25 +227,15 @@ def show(
     # decode image
     @partial(jax.pmap, axis_name="batch")
     def p_decode(indices, params):
-        return vqgan.decode_code(indices, params=params)
-
-    # create a random key
-    seed = random.randint(0, 2**32 - 1)
-    key = jax.random.PRNGKey(seed)
-    # We can customize generation parameters (see https://huggingface.co/blog/how-to-generate)
-    gen_top_k = None
-    gen_top_p = None
-    temperature = None
-    cond_scale = 10.0
-    logger.info(f"Tokenizing queries {queries}")
-    # Note: we could use the same prompt multiple times for faster inference.
-    tokenized_queries = processor(queries)
-    # Finally we replicate the prompts onto each device.
-    tokenized_query = replicate(tokenized_queries)
+        return dalle_obj.vqgan.decode_code(indices, params=params)
 
     # generate images
     images = []
     response = ImagePathResponse()
+
+    # create a random key
+    seed = random.randint(0, 2**32 - 1)
+    key = jax.random.PRNGKey(seed)
     logger.info(f"Performing inference!")
     for i in tqdm(range(max(n_predictions // jax.device_count(), 1))):
         # get a new key
@@ -243,7 +244,7 @@ def show(
         encoded_images = p_generate(
             tokenized_query,
             shard_prng_key(subkey),
-            params,
+            dalle_obj.repl_dalle_mini_params,
             gen_top_k,
             gen_top_p,
             temperature,
@@ -252,7 +253,7 @@ def show(
         # remove BOS
         encoded_images = encoded_images.sequences[..., 1:]
         # decode images
-        decoded_images = p_decode(encoded_images, vqgan_params)
+        decoded_images = p_decode(encoded_images, dalle_obj.repl_vqgan_params)
         decoded_images = decoded_images.clip(0.0, 1.0).reshape((-1, 256, 256, 3))
         for query_idx, decoded_img in enumerate(decoded_images):
             img = Image.fromarray(np.asarray(decoded_img * 255, dtype=np.uint8))
