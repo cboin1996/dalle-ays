@@ -213,7 +213,7 @@ def model_loader(model_paths: ModelPaths) -> DalleModelObject:
     logger.info(f"loading dalle-mini from {model_paths.dalle}!")
     dalle_obj.dalle_mini, dalle_obj.dalle_mini_params = DalleBart.from_pretrained(
         model_paths.dalle,
-        dtype=jnp.float16,
+        dtype=jnp.float32,
         _do_init=False,
     )
 

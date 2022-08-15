@@ -109,7 +109,7 @@ def pull(
     dalle_mini, dalle_mini_params = DalleBart.from_pretrained(
         settings.dalle_model_str,
         revision=dalle_sha,
-        dtype=jnp.float16,
+        dtype=jnp.float32,
         _do_init=False,
     )
 

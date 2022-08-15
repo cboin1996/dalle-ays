@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import pydantic
 from pydantic import BaseModel, BaseSettings
+import jax.numpy as jnp
 
 
 class DalleConfig(BaseSettings):
