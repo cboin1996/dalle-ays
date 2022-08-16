@@ -126,11 +126,12 @@ def image_browser(
                 for filename in os.listdir(settings.outputs_dir)
                 if filename.startswith(search_param)
             ]
-        paths = glob.glob(
-            os.path.join(
-                settings.outputs_dir, f"*{search_param}*{settings.image_format}"
+        else:
+            paths = glob.glob(
+                os.path.join(
+                    settings.outputs_dir, f"*{search_param}*{settings.image_format}"
+                )
             )
-        )
 
     else:
         paths = glob.glob(
