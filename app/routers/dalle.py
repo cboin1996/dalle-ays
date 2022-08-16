@@ -7,7 +7,7 @@ from functools import (  # Model functions are compiled and parallelized to take
     lru_cache,
     partial,
 )
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from asyncio import Lock
 import jax
 import jax.numpy as jnp
@@ -37,6 +37,7 @@ from ..dependencies import (
     model_browser,
     model_loader,
     valid_paths,
+    ImageSearchResponse
 )
 
 uvicorn_logger = logging.getLogger("uvicorn.error")
@@ -64,21 +65,23 @@ async def browse(
         )
     return model_paths
 
-
-@router.get("/images", response_model=List[str])
-async def images(image_paths: List[str] = Depends(image_browser)):
+@router.get("/images",response_model=ImageSearchResponse)
+async def images(
+    search_param: Optional[str] = None,
+    starts_with:  Optional[bool] = False,
+    image_paths: ImageSearchResponse = Depends(image_browser)):
     """Get a list of all images on disk.
 
     Returns:
         List[str]: the list of images
     """
-    if len(image_paths) == 0:
-        return HTTPException(
+    print(type(image_paths))
+    if len(image_paths.images) == 0:
+        raise HTTPException(
             404, detail=f"No images found! Try /dalle/show to generate some images :)"
         )
 
     return image_paths
-
 
 @router.get("/image")
 def get_image(image_path: str):
@@ -176,7 +179,6 @@ def pull(
 
 class ImagePathResponse(BaseModel):
     prompts: Dict[str, List[str]] = {}
-
 
 @router.post("/show", response_model=ImagePathResponse)
 async def show(

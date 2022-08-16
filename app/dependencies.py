@@ -3,7 +3,7 @@ import glob
 import logging
 import os
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from flax.jax_utils import (
     replicate,
 )
@@ -104,18 +104,27 @@ def valid_paths(*args: str) -> bool:
 
     return True
 
+class ImageSearchResponse(BaseModel):
+    images: List[str]=[]
 
 def image_browser(
     settings: settings.DalleConfig = Depends(get_dalle_settings),
-) -> List[str]:
+    search_param: str = None,
+    starts_with: bool = False
+) -> ImageSearchResponse:
     """Browse and return all the image paths on disk
 
     Returns:
         List[str] : the images
     """
-    paths = glob.glob(os.path.join(settings.outputs_dir, "*" + settings.image_format))
-    return paths
-
+    if search_param:
+        if starts_with:
+            paths = [filename for filename in os.listdir(settings.outputs_dir) if filename.startswith(search_param)]  
+        paths = glob.glob(os.path.join(settings.outputs_dir, f'*{search_param}*{settings.image_format}'))
+            
+    else:
+        paths = glob.glob(os.path.join(settings.outputs_dir, f'*{settings.image_format}'))
+    return ImageSearchResponse(images=paths)
 
 def model_browser(
     settings: settings.DalleConfig = Depends(get_dalle_settings),
