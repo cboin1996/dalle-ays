@@ -37,7 +37,7 @@ from ..dependencies import (
     model_browser,
     model_loader,
     valid_paths,
-    ImageSearchResponse
+    ImageSearchResponse,
 )
 
 uvicorn_logger = logging.getLogger("uvicorn.error")
@@ -65,11 +65,13 @@ async def browse(
         )
     return model_paths
 
-@router.get("/images",response_model=ImageSearchResponse)
+
+@router.get("/images", response_model=ImageSearchResponse)
 async def images(
     search_param: Optional[str] = None,
-    starts_with:  Optional[bool] = False,
-    image_paths: ImageSearchResponse = Depends(image_browser)):
+    starts_with: Optional[bool] = False,
+    image_paths: ImageSearchResponse = Depends(image_browser),
+):
     """Get a list of all images on disk.
 
     Returns:
@@ -82,6 +84,7 @@ async def images(
         )
 
     return image_paths
+
 
 @router.get("/image")
 def get_image(image_path: str):
@@ -179,6 +182,7 @@ def pull(
 
 class ImagePathResponse(BaseModel):
     prompts: Dict[str, List[str]] = {}
+
 
 @router.post("/show", response_model=ImagePathResponse)
 async def show(

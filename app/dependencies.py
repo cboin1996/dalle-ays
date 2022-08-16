@@ -104,13 +104,15 @@ def valid_paths(*args: str) -> bool:
 
     return True
 
+
 class ImageSearchResponse(BaseModel):
-    images: List[str]=[]
+    images: List[str] = []
+
 
 def image_browser(
     settings: settings.DalleConfig = Depends(get_dalle_settings),
     search_param: str = None,
-    starts_with: bool = False
+    starts_with: bool = False,
 ) -> ImageSearchResponse:
     """Browse and return all the image paths on disk
 
@@ -119,12 +121,23 @@ def image_browser(
     """
     if search_param:
         if starts_with:
-            paths = [filename for filename in os.listdir(settings.outputs_dir) if filename.startswith(search_param)]  
-        paths = glob.glob(os.path.join(settings.outputs_dir, f'*{search_param}*{settings.image_format}'))
-            
+            paths = [
+                filename
+                for filename in os.listdir(settings.outputs_dir)
+                if filename.startswith(search_param)
+            ]
+        paths = glob.glob(
+            os.path.join(
+                settings.outputs_dir, f"*{search_param}*{settings.image_format}"
+            )
+        )
+
     else:
-        paths = glob.glob(os.path.join(settings.outputs_dir, f'*{settings.image_format}'))
+        paths = glob.glob(
+            os.path.join(settings.outputs_dir, f"*{settings.image_format}")
+        )
     return ImageSearchResponse(images=paths)
+
 
 def model_browser(
     settings: settings.DalleConfig = Depends(get_dalle_settings),
