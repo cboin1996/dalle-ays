@@ -122,7 +122,7 @@ def image_browser(
     if search_param:
         if starts_with:
             paths = [
-                filename
+                os.path.join(settings.outputs_dir, filename)
                 for filename in os.listdir(settings.outputs_dir)
                 if filename.startswith(search_param)
             ]
