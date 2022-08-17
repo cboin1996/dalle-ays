@@ -77,7 +77,6 @@ async def images(
     Returns:
         List[str]: the list of images
     """
-    print(type(image_paths))
     if len(image_paths.images) == 0:
         raise HTTPException(
             404, detail=f"No images found! Try /dalle/show to generate some images :)"
@@ -86,9 +85,12 @@ async def images(
     return image_paths
 
 
-@router.get("/image")
-def get_image(image_path: str):
-    return FileResponse(image_path)
+@router.get("/image", response_class=FileResponse)
+async def get_image(image_path: str):
+    if os.path.exists(image_path):
+        return FileResponse(image_path)
+    else:
+        raise HTTPException(404, detail=f"File {image_path} does not exist!")
 
 
 @router.get("/pull", response_model=ModelPaths)
